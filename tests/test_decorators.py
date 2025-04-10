@@ -79,4 +79,3 @@ def test_log_preserves_return_value(log_file):
 
     assert sum_func(2, 3) == 5
 
-#3####№
