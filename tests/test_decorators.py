@@ -1,82 +1,82 @@
+# test_decorators.py
 import os
 import pytest
 from datetime import datetime
 from src.decorators import log
 
 
-def read_last_log_entry(filepath):
-    with open(filepath, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-        return "".join(lines[-5:]) if lines else ""
-
-
-# Фикстура для временного лог-файла
 @pytest.fixture
 def log_file(tmp_path):
     filepath = tmp_path / "test.log"
-    yield str(filepath)  # Преобразуем Path в строку
+    yield str(filepath)
     if os.path.exists(filepath):
         os.remove(filepath)
 
 
-def test_log_success(log_file):
-    """Проверка записи успешного выполнения"""
-
-    @log(log_file)  # Применяем декоратор с текущим log_file
-    def local_test_func(a, b=1):
-        return a * b
-
-    result = local_test_func(5, b=2)
-    log_entry = read_last_log_entry(log_file)
-
-    assert result == 10
-    assert "local_test_func - УСПЕХ" in log_entry
-    assert "Аргументы: args=(5,), kwargs={'b': 2}" in log_entry
-    assert "Результат: 10" in log_entry
-    assert "Время выполнения:" in log_entry
+def read_log_file(filepath):
+    if not os.path.exists(filepath):
+        return ""
+    with open(filepath, "r", encoding="utf-8") as f:
+        return f.read()
 
 
-def test_log_error(log_file):
-    """Проверка записи ошибки"""
+def test_log_success_to_file(log_file):
+    """Проверка логирования успешного выполнения в файл"""
 
     @log(log_file)
-    def error_func():
-        raise ValueError("Test error")
-
-    with pytest.raises(ValueError):
-        error_func()
-
-    log_entry = read_last_log_entry(log_file)
-    assert "error_func - ОШИБКА" in log_entry
-    assert "Тип ошибки: ValueError" in log_entry
-    assert "Сообщение: Test error" in log_entry
-
-
-def test_log_format(log_file):
-    """Проверка формата записи"""
-
-    @log(log_file)  # Применяем декоратор с текущим log_file
-    def local_test_func(a, b=1):
-        return a * b
-
-    local_test_func(3)
-    log_entry = read_last_log_entry(log_file)
-
-    # Проверяем временную метку
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:")
-    assert timestamp in log_entry
-
-    # Проверяем разделитель
-    assert "-" * 50 in log_entry
-
-
-def test_log_preserves_return_value(log_file):
-    """Проверка, что декоратор не ломает возвращаемое значение"""
-
-    @log(log_file)
-    def sum_func(a, b):
+    def add(a, b):
         return a + b
 
-    assert sum_func(2, 3) == 5
+    result = add(2, 3)
+    log_content = read_log_file(log_file)
+
+    assert result == 5
+    assert "add - args: (2, 3), kwargs: {}" in log_content
+    assert "add - returned: 5" in log_content
+    assert "failed" not in log_content
+
+
+def test_log_error_to_file(log_file):
+    """Проверка логирования ошибки в файл"""
+
+    @log(log_file)
+    def div(a, b):
+        return a / b
+
+    with pytest.raises(ZeroDivisionError):
+        div(1, 0)
+
+    log_content = read_log_file(log_file)
+    assert "div - args: (1, 0), kwargs: {}" in log_content
+    assert "ZeroDivisionError" in log_content
+    assert "division by zero" in log_content
+
+
+def test_log_to_console(capsys):
+    """Проверка логирования в консоль при filepath=None"""
+
+    @log(None)
+    def mul(a, b):
+        return a * b
+
+    result = mul(3, 4)
+    captured = capsys.readouterr()
+
+    assert result == 12
+    assert "mul - args: (3, 4), kwargs: {}" in captured.out
+    assert "mul - returned: 12" in captured.out
+
+
+def test_log_preserves_function_metadata(log_file):
+    """Проверка сохранения метаданных функции"""
+
+    @log(log_file)
+    def example_func(a: int, b: int = 1) -> int:
+        """Example function"""
+        return a + b
+
+    assert example_func.__name__ == "example_func"
+    assert example_func.__doc__ == "Example function"
+    assert example_func.__annotations__ == {"a": int, "b": int, "return": int}
 
 ##
