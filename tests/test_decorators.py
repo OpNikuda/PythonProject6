@@ -78,3 +78,5 @@ def test_log_preserves_function_metadata(log_file):
     assert example_func.__name__ == "example_func"
     assert example_func.__doc__ == "Example function"
     assert example_func.__annotations__ == {"a": int, "b": int, "return": int}
+
+##
