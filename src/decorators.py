@@ -1,65 +1,61 @@
+# decorators.py
 import time
 from datetime import datetime
+from functools import wraps
 
 
 def log(filepath):
-    """Декоратор для логирования в файл"""
+    """Декоратор для логирования вызовов функций в файл или консоль.
+
+    Args:
+        filepath (str): Путь к файлу для логирования. Если None, логи выводятся в консоль.
+
+    Returns:
+        function: Декорированная функция с логированием.
+    """
 
     def decorator(func):
+        @wraps(func)  # Сохраняем метаданные оригинальной функции
         def wrapper(*args, **kwargs):
-            # Засекаем время
-            start_time = time.time()
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            func_name = func.__name__
+
+            # Логируем начало выполнения
+            start_msg = f"{timestamp} - {func_name} - args: {args}, kwargs: {kwargs}"
 
             try:
-                # Выполняем функцию
+                # Выполняем функцию и замеряем время
+                start_time = time.time()
                 result = func(*args, **kwargs)
                 exec_time = time.time() - start_time
 
-                # Формируем запись лога
-                log_entry = (
-                    f"[{timestamp}] {func.__name__} - УСПЕХ\n"
-                    f"Аргументы: args={args}, kwargs={kwargs}\n"
-                    f"Результат: {result}\n"
-                    f"Время выполнения: {exec_time:.4f} сек\n"
-                    f"{'-' * 50}\n"
-                )
+                # Логируем успешное выполнение
+                success_msg = (f"{timestamp} - {func_name} - returned: {result} "
+                               f"[execution time: {exec_time:.4f}s]")
+                log_message = f"{start_msg}\n{success_msg}\n"
 
-                # Записываем в файл
-                with open(filepath, "a", encoding="utf-8") as f:
-                    f.write(log_entry)
+                if filepath:
+                    with open(filepath, "a", encoding="utf-8") as f:
+                        f.write(log_message)
+                else:
+                    print(log_message)
 
                 return result
 
             except Exception as e:
                 # Логируем ошибку
-                error_entry = (
-                    f"[{timestamp}] {func.__name__} - ОШИБКА\n"
-                    f"Аргументы: args={args}, kwargs={kwargs}\n"
-                    f"Тип ошибки: {type(e).__name__}\n"
-                    f"Сообщение: {str(e)}\n"
-                    f"{'-' * 50}\n"
-                )
+                error_msg = (f"{timestamp} - {func_name} - failed: "
+                             f"{type(e).__name__}: {str(e)}")
+                log_message = f"{start_msg}\n{error_msg}\n"
 
-                with open(filepath, "a", encoding="utf-8") as f:
-                    f.write(error_entry)
+                if filepath:
+                    with open(filepath, "a", encoding="utf-8") as f:
+                        f.write(log_message)
+                else:
+                    print(log_message)
 
                 raise  # Пробрасываем ошибку дальше
 
         return wrapper
 
     return decorator
-
-
-# Пример использования
-@log("my_app.log")  # Все логи будут в файле my_app.log
-def calculate(a, b):
-    return a / b
-
-
-# Тестируем (только при непосредственном запуске файла, а не при импорте)
-if __name__ == "__main__":
-    calculate(10, 2)  # Запишет успешный результат
-    calculate(10, 0)  # Запишет ошибку деления на ноль
-
-###
