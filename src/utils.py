@@ -1,15 +1,12 @@
 import json
-import os
+from importlib.resources import files
 
 
 def get_json() -> list[dict]:
-    # Получаем путь к папке, где находится текущий скрипт
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Формируем путь к файлу относительно скрипта
-    filename = os.path.join(script_dir, "data", "operations.json")
-
     try:
-        with open(filename, 'r', encoding='utf-8') as file:
+        # Используем importlib.resources для доступа к файлу в пакете
+        data_package = files('data')
+        with (data_package / 'operations.json').open('r', encoding='utf-8') as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError, PermissionError):
         return []
