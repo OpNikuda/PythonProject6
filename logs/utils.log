@@ -1,6 +1,1 @@
-2025-04-28 13:35:54,796 ERROR: Файл не найден: bebra
-Traceback (most recent call last):
-  File "C:\Users\Администратор\PycharmProjects\PythonProject6\src\utils.py", line 22, in get_json
-    with open(filename, 'r', encoding='utf-8') as file:
-         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'bebra'
+
