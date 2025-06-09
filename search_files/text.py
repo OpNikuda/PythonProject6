@@ -56,3 +56,10 @@ def transactions_count_text(count: int) -> str:
 
 def transaction_separator() -> str:
     return "-" * 50
+
+
+def initial_count_text(count: int) -> str:
+    return f"Программа: Всего транзакций в файле: {count}"
+
+def filtered_count_text(filter_name: str, count: int) -> str:
+    return f"Программа: Транзакций после фильтрации по {filter_name}: {count}"

@@ -34,10 +34,12 @@ def process_json_file() -> None:
     try:
         transactions = json_open(file_path)
         print("\nПрограмма: JSON-файл успешно загружен.")
+        print(f"Всего транзакций в файле: {len(transactions)}")
 
         # Выбор статуса
         status = get_user_choice(status_prompt_text(), ['EXECUTED', 'CANCELED', 'PENDING'])
         filtered = filter_by_status(transactions, status)
+        print(f"Транзакций с статусом {status}: {len(filtered)}")
 
         if not filtered:
             print(no_transactions_text())
@@ -49,15 +51,18 @@ def process_json_file() -> None:
                                       ['ВОЗРАСТАНИЕ', 'УБЫВАНИЕ'])
             reverse = (direction == 'УБЫВАНИЕ')
             filtered = sort_transactions(filtered, reverse=reverse)
+            print(f"Транзакций после сортировки: {len(filtered)}")
 
         # Фильтрация по валюте
         if get_user_choice(currency_filter_prompt_text() + " (Да/Нет)", ['ДА', 'НЕТ']) == 'ДА':
             filtered = filter_by_currency(filtered, 'RUB')
+            print(f"Рублевых транзакций: {len(filtered)}")
 
         # Фильтрация по описанию
         if get_user_choice(description_filter_prompt_text() + " (Да/Нет)", ['ДА', 'НЕТ']) == 'ДА':
             keyword = input(word_input_prompt_text() + " ").strip()
             filtered = filter_by_description(filtered, keyword)
+            print(f"Транзакций с ключевым словом '{keyword}': {len(filtered)}")
 
         # Вывод транзакций
         if not filtered:
